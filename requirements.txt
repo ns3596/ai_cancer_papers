@@ -1,0 +1,11 @@
+streamlit
+pandas
+rank-bm25
+torch
+numpy
+google-cloud-bigquery
+google-cloud-bigquery-storage
+networkx
+pyvis
+sentence-transformers
+scikit-learn
