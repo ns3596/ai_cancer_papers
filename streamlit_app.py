@@ -31,7 +31,7 @@ bq_storage_client = bigquery_storage.BigQueryReadClient()
 def load_papers():
     query = f"""
         SELECT *
-        FROM `{project_id}.{dataset_id}.{table_name}`
+        FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL 
           AND openalex_data_fetched = 'Yes' 
           AND language = 'en'
@@ -43,7 +43,7 @@ def load_papers():
 def load_citation_data():
     citation_query = f"""
         SELECT *
-        FROM `{project_id}.{dataset_id}.{citation_table_name}`
+        FROM `{project_id}.{dataset_name}.{citation_table_name}`
     """
     citation_df = client.query(citation_query).result().to_dataframe(bqstorage_client=bq_storage_client)
     return citation_df
@@ -52,7 +52,7 @@ def load_citation_data():
 def load_reference_data():
     reference_query = f"""
         SELECT *
-        FROM `{project_id}.{dataset_id}.{reference_table_name}`
+        FROM `{project_id}.{dataset_name}.{reference_table_name}`
     """
     reference_df = client.query(reference_query).result().to_dataframe(bqstorage_client=bq_storage_client)
     return reference_df
