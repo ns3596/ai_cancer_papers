@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
 from rank_bm25 import BM25Okapi
 import torch
 import numpy as np
