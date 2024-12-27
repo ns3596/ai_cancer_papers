@@ -20,6 +20,7 @@ dataset_name = st.secrets["bigquery"]["dataset_name"]
 table_name = st.secrets["bigquery"]["table_name"]
 reference_table_name = st.secrets["bigquery"]["reference_table_name"]
 citation_table_name = st.secrets["bigquery"]["citation_table_name"]
+cross_encoder  = st.secrets["bigquery"]["cross_encoder"]
 
 client = bigquery.Client(project=project_id)
 bq_storage_client = bigquery_storage.BigQueryReadClient()
@@ -75,7 +76,7 @@ if 'selected_paper_id' not in st.session_state:
 # -------------------------
 tokenized_corpus = [doc.split(" ") for doc in df['abstract']]
 bm25 = BM25Okapi(tokenized_corpus)
-cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+cross_encoder = CrossEncoder(cross_encoder)
 
 # -------------------------
 # Ranking Methods
