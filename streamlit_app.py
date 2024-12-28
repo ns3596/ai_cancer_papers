@@ -21,7 +21,6 @@ service_account_info = dict(st.secrets["gcp_service_account"])
 credentials = Credentials.from_service_account_info(service_account_info) 
 
 #Retrieve secrets from Streamlit
-project_id = st.secrets["bigquery"]["project_id"]
 dataset_name = st.secrets["bigquery"]["dataset_name"]
 table_name = st.secrets["bigquery"]["table_name"]
 reference_table_name = st.secrets["bigquery"]["reference_table_name"]
