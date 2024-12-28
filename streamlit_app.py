@@ -20,7 +20,6 @@ credentials = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"]
 )
 client = bigquery.Client(credentials=credentials)
-st.write("testingt!")
 project_id = st.secrets["gcp_service_account"]["project_id"]
 dataset_name = st.secrets["bigquery"]["dataset_name"]
 table_name = st.secrets["bigquery"]["table_name"]
@@ -28,7 +27,6 @@ reference_table_name = st.secrets["bigquery"]["reference_table_name"]
 citation_table_name = st.secrets["bigquery"]["citation_table_name"]
 cross_encoder  = st.secrets["bigquery"]["cross_encoder"]
 
-st.write("Reached further of script!")
 @st.cache_data
 def load_papers():
     query = f"""
