@@ -25,7 +25,7 @@ dataset_name = st.secrets["bigquery"]["dataset_name"]
 table_name = st.secrets["bigquery"]["table_name"]
 reference_table_name = st.secrets["bigquery"]["reference_table_name"]
 citation_table_name = st.secrets["bigquery"]["citation_table_name"]
-cross_encoder  = st.secrets["bigquery"]["cross_encoder"]
+cross_encoder_model  = st.secrets["bigquery"]["cross_encoder"]
 
 @st.cache_data
 def load_papers():
@@ -68,7 +68,7 @@ tokenized_corpus = [doc.split(" ") for doc in df['abstract']]
 bm25 = BM25Okapi(tokenized_corpus)
 @st.cache_resource
 def load_cross_encoder():
-    return CrossEncoder(cross_encoder)
+    return CrossEncoder(cross_encoder_model)
 cross_encoder_load = load_cross_encoder()
 
 def bm25_with_crossencoder_ranking(query, top_n=10):
