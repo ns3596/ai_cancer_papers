@@ -198,11 +198,11 @@ def show_search_results():
         st.session_state['view'] = 'main'
         st.session_state['selected_paper_id'] = None
         st.rerun()
-
+    i = 0
     for i, row in papers.iterrows():
+        i =+1
         st.markdown(f"<div style='border-bottom: 1px solid #ddd; padding: 15px;'>", unsafe_allow_html=True)
     
-        # 1) Make title smaller (use <h4>)
         st.markdown(
             f"<h4 style='margin: 0;'>"
             f"{i+1}. <a href='{row['openAccessPdf']}' target='_blank'>{row['title']}</a>"
@@ -210,7 +210,6 @@ def show_search_results():
             unsafe_allow_html=True
         )
     
-        # 2) Remove ID; keep other info in smaller text
         st.markdown(
             f"<p style='color: #666; font-size: 0.9em;'>"
             f"<strong>Publication Year:</strong> {row['year']} | "
@@ -220,12 +219,9 @@ def show_search_results():
             unsafe_allow_html=True,
         )
     
-        # 3) Shortened abstract (200 chars max)
         summary = row['abstract'][:200] + "..." if len(row['abstract']) > 200 else row['abstract']
         st.markdown(f"<p><strong>Abstract:</strong> {summary}</p>", unsafe_allow_html=True)
     
-        # 4) Display a simple HTML table for 3 scores
-        #    (Use row.get(...) if you worry the columns might not exist)
         inf_score = row.get('influential_score', 0)
         gnd_score = row.get('groundbreaking_recent_score', 0)
         nov_score = row.get('normalized_novelty_score', 0)
