@@ -75,7 +75,10 @@ if 'selected_paper_id' not in st.session_state:
 # -------------------------
 tokenized_corpus = [doc.split(" ") for doc in df['abstract']]
 bm25 = BM25Okapi(tokenized_corpus)
-cross_encoder = CrossEncoder(cross_encoder)
+@st.cache_resource
+def load_cross_encoder():
+    return CrossEncoder(cross_encoder)
+cross_encoder_load = load_cross_encoder()
 
 # -------------------------
 # Ranking Methods
