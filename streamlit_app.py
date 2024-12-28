@@ -27,7 +27,6 @@ reference_table_name = st.secrets["bigquery"]["reference_table_name"]
 citation_table_name = st.secrets["bigquery"]["citation_table_name"]
 cross_encoder  = st.secrets["bigquery"]["cross_encoder"]
 
-client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 bq_storage_client = bigquery_storage.BigQueryReadClient()
 st.write("Reached further of script!")
 @st.cache_data
