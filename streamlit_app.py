@@ -198,8 +198,8 @@ def show_search_results():
         st.session_state['view'] = 'main'
         st.session_state['selected_paper_id'] = None
         st.rerun()
-    i = 1
-    for i, row in papers.iterrows():
+
+    for i, (index, row) in enumerate(papers.iterrows(), start=1):
         st.markdown(f"<div style='border-bottom: 1px solid #ddd; padding: 15px;'>", unsafe_allow_html=True)
     
         st.markdown(
@@ -208,7 +208,6 @@ def show_search_results():
             f"</h4>",
             unsafe_allow_html=True
         )
-        i += 1
     
         st.markdown(
             f"<p style='color: #666; font-size: 0.9em;'>"
