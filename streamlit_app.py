@@ -5,6 +5,7 @@ import torch
 import json
 import os
 import numpy as np
+from google.oauth2 import service_account
 from google.cloud import bigquery
 from google.cloud import bigquery_storage
 import networkx as nx
@@ -15,13 +16,10 @@ from sklearn.preprocessing import MinMaxScaler
 
 st.set_page_config(layout="wide")
 
-from google.oauth2.service_account import Credentials
-
-service_account_json_str = st.secrets["gcp_service_account"]["json"]
-service_account_info = json.loads(service_account_json_str)
-credentials = Credentials.from_service_account_info(service_account_info)
-
-client = bigquery.Client(credentials=credentials, project=credentials.project_id)
+credentials = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"]
+)
+client = bigquery.Client(credentials=credentials, project=project_id)
 
 dataset_name = st.secrets["bigquery"]["dataset_name"]
 table_name = st.secrets["bigquery"]["table_name"]
