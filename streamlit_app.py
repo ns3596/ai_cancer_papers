@@ -17,8 +17,16 @@ st.set_page_config(layout="wide")
 
 from google.oauth2.service_account import Credentials
 
-service_account_info = dict(st.secrets["gcp_service_account"])
-credentials = Credentials.from_service_account_info(service_account_info) 
+service_account_json_str = st.secrets["gcp_service_account"]["json"]
+
+# 2) Convert the string to a Python dictionary
+service_account_info = json.loads(service_account_json_str)
+
+# 3) Build credentials from this dictionary
+credentials = Credentials.from_service_account_info(service_account_info)
+
+# 4) Create a BigQuery client with these credentials
+client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 
 #Retrieve secrets from Streamlit
 dataset_name = st.secrets["bigquery"]["dataset_name"]
