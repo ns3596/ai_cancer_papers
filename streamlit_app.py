@@ -198,16 +198,17 @@ def show_search_results():
         st.session_state['view'] = 'main'
         st.session_state['selected_paper_id'] = None
         st.rerun()
-    i = 0
+    i = 1
     for i, row in papers.iterrows():
         st.markdown(f"<div style='border-bottom: 1px solid #ddd; padding: 15px;'>", unsafe_allow_html=True)
     
         st.markdown(
             f"<h4 style='margin: 0;'>"
-            f"{i+1}. <a href='{row['openAccessPdf']}' target='_blank'>{row['title']}</a>"
+            f"{i}. <a href='{row['openAccessPdf']}' target='_blank'>{row['title']}</a>"
             f"</h4>",
             unsafe_allow_html=True
         )
+        i += 1
     
         st.markdown(
             f"<p style='color: #666; font-size: 0.9em;'>"
