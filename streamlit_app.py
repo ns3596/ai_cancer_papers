@@ -69,6 +69,7 @@ def load_cross_encoder():
     return CrossEncoder(cross_encoder_model)
 
 def bm25_with_crossencoder_ranking(query, top_n=10):
+    df = load_papers()
     cross_encoder = load_cross_encoder()
     query_tokens = query.split(" ")
     bm25_scores = bm25.get_scores(query_tokens)
@@ -123,7 +124,6 @@ def personalized_ranking(query, user_weights, top_n=10):
     return bm25_candidates.sort_values(by='personalized_score', ascending=False).head(top_n)
 
 def show_main_page():
-    df = load_papers()
     st.title("AI Cancer Paper Search Engine (Demo)")
     user_role = st.selectbox("Select your role:", ["Academic", "Researcher", "Student"])
     query = st.text_input("Enter your search query:", value=st.session_state.get('query', ''))
