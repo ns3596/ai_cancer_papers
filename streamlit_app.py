@@ -18,17 +18,11 @@ st.set_page_config(layout="wide")
 from google.oauth2.service_account import Credentials
 
 service_account_json_str = st.secrets["gcp_service_account"]["json"]
-
-# 2) Convert the string to a Python dictionary
 service_account_info = json.loads(service_account_json_str)
-
-# 3) Build credentials from this dictionary
 credentials = Credentials.from_service_account_info(service_account_info)
 
-# 4) Create a BigQuery client with these credentials
 client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 
-#Retrieve secrets from Streamlit
 dataset_name = st.secrets["bigquery"]["dataset_name"]
 table_name = st.secrets["bigquery"]["table_name"]
 reference_table_name = st.secrets["bigquery"]["reference_table_name"]
@@ -66,22 +60,15 @@ def load_reference_data():
     reference_df = client.query(reference_query).result().to_dataframe(bqstorage_client=bq_storage_client)
     return reference_df
 
-# Load data
 df = load_papers()
 citation_data = load_citation_data()
 reference_data = load_reference_data()
 
-# -------------------------
-# Initialize Session State
-# -------------------------
 if 'view' not in st.session_state:
     st.session_state['view'] = 'main'
 if 'selected_paper_id' not in st.session_state:
     st.session_state['selected_paper_id'] = None
 
-# -------------------------
-# BM25 and CrossEncoder Setup
-# -------------------------
 tokenized_corpus = [doc.split(" ") for doc in df['abstract']]
 bm25 = BM25Okapi(tokenized_corpus)
 @st.cache_resource
@@ -89,9 +76,6 @@ def load_cross_encoder():
     return CrossEncoder(cross_encoder)
 cross_encoder_load = load_cross_encoder()
 
-# -------------------------
-# Ranking Methods
-# -------------------------
 def bm25_with_crossencoder_ranking(query, top_n=10):
     query_tokens = query.split(" ")
     bm25_scores = bm25.get_scores(query_tokens)
@@ -145,9 +129,6 @@ def personalized_ranking(query, user_weights, top_n=10):
 
     return bm25_candidates.sort_values(by='personalized_score', ascending=False).head(top_n)
 
-# -------------------------
-# Streamlit Pages
-# -------------------------
 def show_main_page():
     st.title("AI Cancer Paper Search Engine (Demo)")
     user_role = st.selectbox("Select your role:", ["Academic", "Researcher", "Student"])
@@ -179,7 +160,6 @@ def filter_by_role(df, user_role):
 
     elif user_role == "Student":
         max_influential_citations = st.sidebar.slider("Maximum Influential Citation Count", min_value=0, max_value=10, step=1, value=3)
-        # If the column doesn't exist, handle gracefully
         if 'influentialCitationCount' in df.columns:
             return df[df['influentialCitationCount'] <= max_influential_citations]
         else:
@@ -194,7 +174,6 @@ def show_search_results():
 
     filtered_df = filter_by_role(df, user_role)
 
-    # Decide which ranking to apply
     if ranking_method == "Normal Ranking (BM25 & Cross-Encoder)":
         papers = bm25_with_crossencoder_ranking(query)
     elif ranking_method == "Influential Ranking":
@@ -222,14 +201,12 @@ def show_search_results():
         st.session_state['selected_paper_id'] = None
         st.rerun()
 
-    # Display results
     for i, row in papers.iterrows():
         st.markdown(f"<div style='border-bottom: 1px solid #ddd; padding: 15px;'>", unsafe_allow_html=True)
         title_link = row['title'] if 'title' in row else "Unknown Title"
         open_access_pdf = row.get('openAccessPdf', '#')
         st.markdown(f"<h3 style='margin: 0;'>{i+1}. <a href='{open_access_pdf}' target='_blank'>{title_link}</a></h3>", unsafe_allow_html=True)
 
-        # Additional info
         year = row.get('year', 'N/A')
         citation_count = row.get('citationCount', 'N/A')
         ref_count = row.get('referenceCount', 'N/A')
@@ -257,7 +234,6 @@ def show_search_results():
         st.markdown("</div>", unsafe_allow_html=True)
 
 def show_paper_details(paper_id):
-    # If user clicked "View Details", show more info
     paper = df[df['id'] == paper_id].iloc[0] if not df[df['id'] == paper_id].empty else None
     if paper is None:
         st.write("Paper not found.")
@@ -271,7 +247,6 @@ def show_paper_details(paper_id):
         st.session_state['selected_paper_id'] = None
         st.rerun()
 
-# Main app logic
 if st.session_state['view'] == 'main':
     show_main_page()
 elif st.session_state['view'] == 'results':
