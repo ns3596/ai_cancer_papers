@@ -28,8 +28,6 @@ reference_table_name = st.secrets["bigquery"]["reference_table_name"]
 citation_table_name = st.secrets["bigquery"]["citation_table_name"]
 cross_encoder  = st.secrets["bigquery"]["cross_encoder"]
 
-bq_storage_client = bigquery_storage.BigQueryReadClient()
-st.write("testingt!")
 st.write("Reached further of script!")
 @st.cache_data
 def load_papers():
@@ -38,7 +36,7 @@ def load_papers():
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
-    df = client.query(query).result().to_dataframe(bqstorage_client=bq_storage_client)
+    df = client.query(query).result().to_dataframe()
     return df
 
 @st.cache_data
@@ -47,7 +45,7 @@ def load_citation_data():
         SELECT id, source_openalex_id, citation_openalex_id, title
         FROM `{project_id}.{dataset_name}.{citation_table_name}`
     """
-    citation_df = client.query(citation_query).result().to_dataframe(bqstorage_client=bq_storage_client)
+    citation_df = client.query(citation_query).result().to_dataframe()
     return citation_df
 
 @st.cache_data
@@ -56,7 +54,7 @@ def load_reference_data():
         SELECT id, source_openalex_id, referenced AS reference_openalex_id, title
         FROM `{project_id}.{dataset_name}.{reference_table_name}`
     """
-    reference_df = client.query(reference_query).result().to_dataframe(bqstorage_client=bq_storage_client)
+    reference_df = client.query(reference_query).result().to_dataframe()
     return reference_df
 
 df = load_papers()
