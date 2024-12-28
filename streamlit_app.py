@@ -242,7 +242,7 @@ def show_search_results():
               <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Groundbreaking Score</th>
               <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Novelty Score</th>
             </tr>
-          </thead>
+          </thead style='background-color: #292727;'>
           <tbody>
             <tr>
               <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{inf_score:.2f}</td>
