@@ -15,11 +15,10 @@ from sklearn.preprocessing import MinMaxScaler
 
 st.set_page_config(layout="wide")
 
-service_account_json_str = st.secrets["gcp_service_account"]["json"]
-service_account_info = json.loads(service_account_json_str) 
-
 from google.oauth2.service_account import Credentials
-credentials = Credentials.from_service_account_info(service_account_info)
+
+service_account_info = dict(st.secrets["gcp_service_account"])
+credentials = Credentials.from_service_account_info(service_account_info) 
 
 #Retrieve secrets from Streamlit
 project_id = st.secrets["bigquery"]["project_id"]
