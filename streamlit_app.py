@@ -30,7 +30,9 @@ cross_encoder  = st.secrets["bigquery"]["cross_encoder"]
 @st.cache_data
 def load_papers():
     query = f"""
-        SELECT *
+        SELECT id, title, abstract, summary, citationCount, influentialCitationCount, authors_list, referenceCount,
+               fieldsOfStudy, safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
+               publicationDate, authors, openAccessPdf,  openalex_id
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
@@ -56,8 +58,6 @@ def load_reference_data():
     return reference_df
 
 df = load_papers()
-citation_data = load_citation_data()
-reference_data = load_reference_data()
 
 if 'view' not in st.session_state:
     st.session_state['view'] = 'main'
