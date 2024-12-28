@@ -226,21 +226,30 @@ def show_search_results():
         nov_score = row.get('normalized_novelty_score', 0)
     
         table_html = f"""
-        <table style='border-collapse: collapse; margin-top:10px; font-size: 0.9em;'>
-            <thead>
-                <tr>
-                    <th style='border:1px solid #ccc; padding:5px;'>Influential Score</th>
-                    <th style='border:1px solid #ccc; padding:5px;'>Groundbreaking Score</th>
-                    <th style='border:1px solid #ccc; padding:5px;'>Novelty Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style='border:1px solid #ccc; padding:5px;'>{inf_score:.2f}</td>
-                    <td style='border:1px solid #ccc; padding:5px;'>{gnd_score:.2f}</td>
-                    <td style='border:1px solid #ccc; padding:5px;'>{nov_score:.2f}</td>
-                </tr>
-            </tbody>
+        <table 
+          style='
+            border-collapse: separate; 
+            border: 2px solid #bbb; 
+            border-radius: 6px;
+            margin-top: 10px; 
+            font-size: 0.9em;
+            overflow: hidden;
+          '
+        >
+          <thead style='background-color: #f7f7f7;'>
+            <tr>
+              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ccc;'>Influential Score</th>
+              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ccc;'>Groundbreaking Score</th>
+              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ccc;'>Novelty Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>{inf_score:.2f}</td>
+              <td style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>{gnd_score:.2f}</td>
+              <td style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>{nov_score:.2f}</td>
+            </tr>
+          </tbody>
         </table>
         """
         st.markdown(table_html, unsafe_allow_html=True)
