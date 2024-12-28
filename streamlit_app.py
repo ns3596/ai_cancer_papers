@@ -238,9 +238,9 @@ def show_search_results():
         >
           <thead style='background-color: #f7f7f7;'>
             <tr>
-              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ccc;'>Influential Score</th>
-              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ccc;'>Groundbreaking Score</th>
-              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ccc;'>Novelty Score</th>
+              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Influential Score</th>
+              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Groundbreaking Score</th>
+              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Novelty Score</th>
             </tr>
           </thead>
           <tbody>
