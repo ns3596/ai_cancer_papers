@@ -62,14 +62,14 @@ if 'view' not in st.session_state:
 if 'selected_paper_id' not in st.session_state:
     st.session_state['selected_paper_id'] = None
 
-tokenized_corpus = [doc.split(" ") for doc in df['abstract']]
-bm25 = BM25Okapi(tokenized_corpus)
 @st.cache_resource
 def load_cross_encoder():
     return CrossEncoder(cross_encoder_model)
 
 def bm25_with_crossencoder_ranking(query, top_n=10):
     df = load_papers()
+    tokenized_corpus = [doc.split(" ") for doc in df['abstract']]
+    bm25 = BM25Okapi(tokenized_corpus)
     cross_encoder = load_cross_encoder()
     query_tokens = query.split(" ")
     bm25_scores = bm25.get_scores(query_tokens)
