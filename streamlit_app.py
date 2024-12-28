@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from rank_bm25 import BM25Okapi
 import torch
+import json
+import os
 import numpy as np
 from google.cloud import bigquery
 from google.cloud import bigquery_storage
@@ -12,7 +14,13 @@ from sentence_transformers import CrossEncoder
 from sklearn.preprocessing import MinMaxScaler
 
 st.set_page_config(layout="wide")
-st.write("Reached top of script!")
+
+service_account_json_str = st.secrets["gcp_service_account"]
+service_account_info = json.loads(service_account_json_str)
+
+from google.oauth2.service_account import Credentials
+credentials = Credentials.from_service_account_info(service_account_info)
+
 #Retrieve secrets from Streamlit
 project_id = st.secrets["bigquery"]["project_id"]
 dataset_name = st.secrets["bigquery"]["dataset_name"]
@@ -21,7 +29,7 @@ reference_table_name = st.secrets["bigquery"]["reference_table_name"]
 citation_table_name = st.secrets["bigquery"]["citation_table_name"]
 cross_encoder  = st.secrets["bigquery"]["cross_encoder"]
 
-client = bigquery.Client(project=project_id)
+client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 bq_storage_client = bigquery_storage.BigQueryReadClient()
 st.write("Reached further of script!")
 @st.cache_data
