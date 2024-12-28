@@ -38,7 +38,7 @@ def load_papers():
     """
     df = client.query(query).result().to_dataframe()
     return df
-
+df = load_papers()
 @st.cache_data
 def load_citation_data():
     citation_query = f"""
@@ -67,7 +67,7 @@ def load_cross_encoder():
     return CrossEncoder(cross_encoder_model)
 
 def bm25_with_crossencoder_ranking(query, top_n=10):
-    df = load_papers()
+
     tokenized_corpus = [doc.split(" ") for doc in df['abstract']]
     bm25 = BM25Okapi(tokenized_corpus)
     cross_encoder = load_cross_encoder()
