@@ -229,8 +229,8 @@ def show_search_results():
         <table 
           style='
             border-collapse: separate; 
-            border: 2px solid #bbb; 
-            border-radius: 6px;
+            border: 0px solid #bbb; 
+            border-radius: 0px;
             margin-top: 10px; 
             font-size: 0.9em;
             overflow: hidden;
