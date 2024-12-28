@@ -218,8 +218,8 @@ def show_search_results():
             unsafe_allow_html=True,
         )
     
-        summary = row['abstract'][:200] + "..." if len(row['abstract']) > 200 else row['abstract']
-        st.markdown(f"<p><strong>Abstract:</strong> {summary}</p>", unsafe_allow_html=True)
+        summary = row['abstract'][:200] + "..." if len(row['summary']) > 200 else row['summary']
+        st.markdown(f"<p><strong>Summary:</strong> {summary}</p>", unsafe_allow_html=True)
     
         inf_score = row.get('influential_score', 0)
         gnd_score = row.get('groundbreaking_recent_score', 0)
