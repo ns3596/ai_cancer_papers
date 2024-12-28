@@ -245,9 +245,9 @@ def show_search_results():
           </thead>
           <tbody>
             <tr>
-              <td style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>{inf_score:.2f}</td>
-              <td style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>{gnd_score:.2f}</td>
-              <td style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>{nov_score:.2f}</td>
+              <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{inf_score:.2f}</td>
+              <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{gnd_score:.2f}</td>
+              <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{nov_score:.2f}</td>
             </tr>
           </tbody>
         </table>
