@@ -12,7 +12,7 @@ from sentence_transformers import CrossEncoder
 from sklearn.preprocessing import MinMaxScaler
 
 st.set_page_config(layout="wide")
-
+st.write("Reached top of script!")
 #Retrieve secrets from Streamlit
 project_id = st.secrets["bigquery"]["project_id"]
 dataset_name = st.secrets["bigquery"]["dataset_name"]
@@ -23,7 +23,7 @@ cross_encoder  = st.secrets["bigquery"]["cross_encoder"]
 
 client = bigquery.Client(project=project_id)
 bq_storage_client = bigquery_storage.BigQueryReadClient()
-
+st.write("Reached further of script!")
 @st.cache_data
 def load_papers():
     query = f"""
