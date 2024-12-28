@@ -27,9 +27,9 @@ table_name = st.secrets["bigquery"]["table_name"]
 reference_table_name = st.secrets["bigquery"]["reference_table_name"]
 citation_table_name = st.secrets["bigquery"]["citation_table_name"]
 cross_encoder  = st.secrets["bigquery"]["cross_encoder"]
-st.write("testingt!")
-bq_storage_client = bigquery_storage.BigQueryReadClient()
 
+bq_storage_client = bigquery_storage.BigQueryReadClient()
+st.write("testingt!")
 st.write("Reached further of script!")
 @st.cache_data
 def load_papers():
