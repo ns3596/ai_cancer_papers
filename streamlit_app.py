@@ -251,7 +251,7 @@ def show_search_results():
         st.markdown(table_html, unsafe_allow_html=True)
     
         # 5) Details button
-        if st.button(f"View Details for {row['title']}", key=f"details_{row['id']}"):
+        if st.button(f"View More Details", key=f"details_{row['id']}"):
             st.session_state['view'] = 'details'
             st.session_state['selected_paper_id'] = row['id']
             st.rerun()
