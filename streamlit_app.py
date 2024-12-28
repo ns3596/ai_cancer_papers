@@ -200,12 +200,11 @@ def show_search_results():
         st.rerun()
     i = 0
     for i, row in papers.iterrows():
-        
         st.markdown(f"<div style='border-bottom: 1px solid #ddd; padding: 15px;'>", unsafe_allow_html=True)
     
         st.markdown(
             f"<h4 style='margin: 0;'>"
-            f"{i=+ 1}. <a href='{row['openAccessPdf']}' target='_blank'>{row['title']}</a>"
+            f"{i+1}. <a href='{row['openAccessPdf']}' target='_blank'>{row['title']}</a>"
             f"</h4>",
             unsafe_allow_html=True
         )
