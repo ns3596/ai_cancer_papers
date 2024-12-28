@@ -9,3 +9,4 @@ networkx
 pyvis
 sentence-transformers
 scikit-learn
+db-dtypes
