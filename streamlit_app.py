@@ -19,8 +19,8 @@ st.set_page_config(layout="wide")
 credentials = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"]
 )
-client = bigquery.Client(credentials=credentials, project=project_id)
-
+client = bigquery.Client(credentials=credentials)
+project_id = st.secrets["gcp_service_account"]["project_id"]
 dataset_name = st.secrets["bigquery"]["dataset_name"]
 table_name = st.secrets["bigquery"]["table_name"]
 reference_table_name = st.secrets["bigquery"]["reference_table_name"]
@@ -34,7 +34,7 @@ st.write("Reached further of script!")
 def load_papers():
     query = f"""
         SELECT *
-        FROM `{client.project}.{dataset_name}.{table_name}`
+        FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
     df = client.query(query).result().to_dataframe(bqstorage_client=bq_storage_client)
@@ -44,7 +44,7 @@ def load_papers():
 def load_citation_data():
     citation_query = f"""
         SELECT id, source_openalex_id, citation_openalex_id, title
-        FROM `{client.project}.{dataset_name}.{citation_table_name}`
+        FROM `{project_id}.{dataset_name}.{citation_table_name}`
     """
     citation_df = client.query(citation_query).result().to_dataframe(bqstorage_client=bq_storage_client)
     return citation_df
@@ -53,7 +53,7 @@ def load_citation_data():
 def load_reference_data():
     reference_query = f"""
         SELECT id, source_openalex_id, referenced AS reference_openalex_id, title
-        FROM `{client.project}.{dataset_name}.{reference_table_name}`
+        FROM `{project_id}.{dataset_name}.{reference_table_name}`
     """
     reference_df = client.query(reference_query).result().to_dataframe(bqstorage_client=bq_storage_client)
     return reference_df
