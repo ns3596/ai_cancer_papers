@@ -236,7 +236,7 @@ def show_search_results():
             overflow: hidden;
           '
         >
-          <thead style='background-color: #f7f7f7;'>
+          <thead style='background-color: #000000;'>
             <tr>
               <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Influential Score</th>
               <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Groundbreaking Score</th>
