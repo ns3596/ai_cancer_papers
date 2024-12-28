@@ -19,7 +19,6 @@ st.set_page_config(layout="wide")
 credentials = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"]
 )
-st.write("Reached further of script!")
 client = bigquery.Client(credentials=credentials)
 st.write("testingt!")
 project_id = st.secrets["gcp_service_account"]["project_id"]
