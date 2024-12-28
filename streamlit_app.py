@@ -69,7 +69,7 @@ bm25 = BM25Okapi(tokenized_corpus)
 @st.cache_resource
 def load_cross_encoder():
     return CrossEncoder(cross_encoder_model)
-cross_encoder_load = load_cross_encoder()
+cross_encoder = load_cross_encoder()
 
 def bm25_with_crossencoder_ranking(query, top_n=10):
     query_tokens = query.split(" ")
