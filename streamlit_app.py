@@ -201,33 +201,59 @@ def show_search_results():
 
     for i, row in papers.iterrows():
         st.markdown(f"<div style='border-bottom: 1px solid #ddd; padding: 15px;'>", unsafe_allow_html=True)
-        title_link = row['title'] if 'title' in row else "Unknown Title"
-        open_access_pdf = row.get('openAccessPdf', '#')
-        st.markdown(f"<h3 style='margin: 0;'>{i+1}. <a href='{open_access_pdf}' target='_blank'>{title_link}</a></h3>", unsafe_allow_html=True)
-
-        year = row.get('year', 'N/A')
-        citation_count = row.get('citationCount', 'N/A')
-        ref_count = row.get('referenceCount', 'N/A')
-        paper_id = row.get('id', 'N/A')
-
+    
+        # 1) Make title smaller (use <h4>)
+        st.markdown(
+            f"<h4 style='margin: 0;'>"
+            f"{i+1}. <a href='{row['openAccessPdf']}' target='_blank'>{row['title']}</a>"
+            f"</h4>",
+            unsafe_allow_html=True
+        )
+    
+        # 2) Remove ID; keep other info in smaller text
         st.markdown(
             f"<p style='color: #666; font-size: 0.9em;'>"
-            f"<strong>ID:</strong> {paper_id} | "
-            f"<strong>Publication Year:</strong> {year} | "
-            f"<strong>Citations:</strong> {citation_count} | "
-            f"<strong>References:</strong> {ref_count}"
+            f"<strong>Publication Year:</strong> {row['year']} | "
+            f"<strong>Citations:</strong> {row['citationCount']} | "
+            f"<strong>References:</strong> {row['referenceCount']}"
             "</p>",
             unsafe_allow_html=True,
         )
-        if 'abstract' in row and isinstance(row['abstract'], str):
-            summary = (row['abstract'][:200] + "...") if len(row['abstract']) > 200 else row['abstract']
-        else:
-            summary = "No Abstract"
+    
+        # 3) Shortened abstract (200 chars max)
+        summary = row['abstract'][:200] + "..." if len(row['abstract']) > 200 else row['abstract']
         st.markdown(f"<p><strong>Abstract:</strong> {summary}</p>", unsafe_allow_html=True)
-
-        if st.button(f"View Details for {title_link}", key=f"details_{paper_id}"):
+    
+        # 4) Display a simple HTML table for 3 scores
+        #    (Use row.get(...) if you worry the columns might not exist)
+        inf_score = row.get('influential_score', 0)
+        gnd_score = row.get('groundbreaking_recent_score', 0)
+        nov_score = row.get('normalized_novelty_score', 0)
+    
+        table_html = f"""
+        <table style='border-collapse: collapse; margin-top:10px; font-size: 0.9em;'>
+            <thead>
+                <tr>
+                    <th style='border:1px solid #ccc; padding:5px;'>Influential Score</th>
+                    <th style='border:1px solid #ccc; padding:5px;'>Groundbreaking Score</th>
+                    <th style='border:1px solid #ccc; padding:5px;'>Novelty Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style='border:1px solid #ccc; padding:5px;'>{inf_score:.2f}</td>
+                    <td style='border:1px solid #ccc; padding:5px;'>{gnd_score:.2f}</td>
+                    <td style='border:1px solid #ccc; padding:5px;'>{nov_score:.2f}</td>
+                </tr>
+            </tbody>
+        </table>
+        """
+        st.markdown(table_html, unsafe_allow_html=True)
+    
+        # 5) Details button
+        if st.button(f"View Details for {row['title']}", key=f"details_{row['id']}"):
             st.session_state['view'] = 'details'
-            st.session_state['selected_paper_id'] = paper_id
+            st.session_state['selected_paper_id'] = row['id']
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
