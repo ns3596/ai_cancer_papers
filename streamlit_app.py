@@ -298,21 +298,25 @@ def show_paper_details(paper_id):
     abstract_text = paper.get("abstract", "No abstract available.")
     st.write(abstract_text)
 
-    counts_by_year = paper.get("counts_by_year", [])
-    if counts_by_year:
+    proto_list = paper.get('counts_by_year', [])
+    counts_by_year_data = []
+    for item in proto_list:
+        # item is a proto message with 'year' and 'cited_by_count' attributes
+        counts_by_year_data.append({
+            'year': item.year,
+            'cited_by_count': item.cited_by_count
+        })
+
+    if counts_by_year_data:
         st.subheader("Cumulative Citations by Year")
-
-
-        cby_df = pd.DataFrame(counts_by_year).sort_values("year")
-
+        cby_df = pd.DataFrame(counts_by_year_data).sort_values("year")
         cby_df["cumulative_citations"] = cby_df["cited_by_count"].cumsum()
-
         fig = px.line(
             cby_df,
             x="year",
             y="cumulative_citations",
-            labels={"year": "Year", "cumulative_citations": "Cumulative Citations"},
-            title="Cumulative Citations Over Time"
+            title="Cumulative Citations Over Time",
+            labels={"year": "Year", "cumulative_citations": "Cumulative Citations"}
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
