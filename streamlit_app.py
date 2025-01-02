@@ -33,8 +33,8 @@ def load_papers():
     query = f"""
         SELECT id, title, abstract, summary, citationCount, influentialCitationCount, authors_list, referenceCount,
                fieldsOfStudy, safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
-               publicationDate, authors, openAccessPdf,  openalex_id, influential_score, groundbreaking_recent_score,
-               citation_count, citation_score, normalized_novelty_score, social_media_score, counts_by_year
+               publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2), round(groundbreaking_recent_score,2),
+               citation_count, round(citation_score,2), round(normalized_novelty_score,2), round(social_media_score,2), counts_by_year
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
@@ -288,9 +288,9 @@ def show_paper_details(paper_id):
     st.subheader("Totals")
     col5, col6 = st.columns(2)
     with col5:
-        st.metric("Total Citations", paper.get("citation_score", "N/A"))
+        st.metric("Total Citations", paper.get("citation_score", None))
     with col6:
-        st.metric("Total Score", paper.get("social_media_score", "N/A"))
+        st.metric(f"{score:.2f}", paper.get("social_media_score", None))
 
 
     st.subheader("Abstract")
@@ -310,8 +310,9 @@ def show_paper_details(paper_id):
 
     if counts_by_year_data:
         st.subheader("Cumulative Citations by Year")
-        cby_df = pd.DataFrame(counts_by_year_data).sort_values("year")
-        cby_df["cumulative_citations"] = cby_df["cited_by_count"].cumsum()
+        cby_df["year"] = cby_df["year"].astype(int)
+        cby_df["cumulative_citations"] = cby_df["cumulative_citations"].round(2)
+
         fig = px.line(
             cby_df,
             x="year",
@@ -319,6 +320,18 @@ def show_paper_details(paper_id):
             title="Cumulative Citations Over Time",
             labels={"year": "Year", "cumulative_citations": "Cumulative Citations"}
         )
+
+        fig.update_layout(
+            xaxis=dict(
+                tickmode='linear',
+                dtick=1
+            )
+        )
+
+        fig.update_traces(
+            hovertemplate="Year: %{x}<br>Cumulative Citations: %{y:.2f}"
+        )
+
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No year-by-year citation data available.")
