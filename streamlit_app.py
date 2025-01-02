@@ -44,12 +44,12 @@ df = load_papers()
 @st.cache_data
 def load_citation_data():
     citation_query = f"""
-        SELECT id, source_openalex_id, citation_openalex_id, title
+        SELECT *
         FROM `{project_id}.{dataset_name}.{citation_table_name}`
     """
     citation_df = client.query(citation_query).result().to_dataframe()
     return citation_df
-
+df_citation = load_citation_data()
 @st.cache_data
 def load_reference_data():
     reference_query = f"""
@@ -130,11 +130,11 @@ def personalized_ranking(query, user_weights, top_n=10):
     return bm25_candidates.sort_values(by='personalized_score', ascending=False).head(top_n)
 
 def show_main_page():
-    st.title("AI Cancer Paper Search Engine (Demo)")
-    user_role = st.selectbox("Select your role:", ["Academic", "Researcher", "Student"])
+    st.title("AI Cancer Paper Search Engine")
+    user_role = st.selectbox("Select your role:", ["Anyone","Academic", "Researcher", "Student"])
     query = st.text_input("Enter your search query:", value=st.session_state.get('query', ''))
     ranking_method = st.selectbox("Choose a ranking method:", 
-        ["Normal Ranking (BM25 & Cross-Encoder)", "Influential Ranking", "Groundbreaking Ranking", "Personalized Ranking"])
+        ["Normal Ranking (BM25 & Cross-Encoder)", "Influential Ranking", "Groundbreaking Recent Ranking", "Personalised Ranking"])
     st.session_state['query'] = query
 
     if st.button("Search"):
@@ -165,6 +165,8 @@ def filter_by_role(df, user_role):
         else:
             st.warning("No 'influentialCitationCount' column found.")
             return df
+    elif user_role == "Anyone":
+        continue
     return df
 
 def show_search_results():
@@ -178,7 +180,7 @@ def show_search_results():
         papers = bm25_with_crossencoder_ranking(query)
     elif ranking_method == "Influential Ranking":
         papers = influential_ranking(query)
-    elif ranking_method == "Groundbreaking Ranking":
+    elif ranking_method == "Groundbreaking Recent Ranking":
         papers = groundbreaking_ranking(query)
     elif ranking_method == "Personalized Ranking":
         novelty_weight = st.sidebar.slider("Novelty Weight:", 0.0, 1.0, 0.5)
@@ -344,7 +346,24 @@ def show_paper_details(paper_id):
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No year-by-year citation data available.")
+    st.subheader("Citation Network")
+    root_openalex_id = paper.get('openalex_id', None)
 
+    if not root_openalex_id:
+        st.warning("No OpenAlex ID found for this paper. Can't build citation map.")
+    else:
+
+        max_hop = st.slider("Maximum Hop Distance", 1, 5, 3)
+        min_citations = st.slider("Minimum Citation Count to include", 0, 1000, 0)
+
+        if st.button("Generate Citation Map"):
+
+            show_citation_map(
+                df_citation=df_citation,
+                root_openalex_id=root_openalex_id,
+                max_hop=max_hop,
+                min_citation_count=min_citations
+            )
 
     if st.button("Back to Search Results"):
         st.session_state['view'] = 'results'
@@ -357,3 +376,52 @@ elif st.session_state['view'] == 'results':
     show_search_results()
 elif st.session_state['view'] == 'details' and st.session_state['selected_paper_id'] is not None:
     show_paper_details(st.session_state['selected_paper_id'])
+def show_citation_map(df_citation, root_openalex_id, max_hop, min_citation_count):
+
+    sub_df = df_citation[
+        (df_citation['openalex_id'] == root_openalex_id) &
+        (df_citation['hop'] <= max_hop) &
+        (df_citation['citationCount'] >= min_citation_count)
+    ]
+
+    if sub_df.empty:
+        st.info("No edges found for these settings.")
+        return
+
+    G = nx.DiGraph()
+    for _, row in sub_df.iterrows():
+        src = row['source_openalex_id']
+        tgt = row['citation_openalex_id']
+        G.add_node(src)
+        G.add_node(tgt)
+        G.add_edge(src, tgt, hop=row['hop'])
+
+    if root_openalex_id not in G.nodes:
+        st.warning("Root paper not in graph!")
+        return
+
+    dist_map = nx.single_source_shortest_path_length(G, root_openalex_id, cutoff=max_hop)
+    sub_nodes = set(dist_map.keys())
+
+    net = Network(height="600px", width="100%", directed=True)
+    net.force_atlas_2based()
+
+    distance_colors = {
+        0: "#FF6666",
+        1: "#FFA500",
+        2: "#FFFF00",
+        3: "#66FF66",
+    }
+
+    for node in sub_nodes:
+        dist = dist_map[node]
+        color = distance_colors.get(dist, "#cccccc")
+        size = 20 if dist == 0 else 15
+        net.add_node(str(node), label=str(node), color=color, size=size)
+
+    for (source, target) in G.edges():
+        if source in sub_nodes and target in sub_nodes:
+            net.add_edge(str(source), str(target), color="#999999")
+
+    html_str = net.generate_html()
+    st_html(html_str, height=600, scrolling=True)
