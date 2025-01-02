@@ -13,6 +13,7 @@ from pyvis.network import Network
 import streamlit.components.v1 as components
 from sentence_transformers import CrossEncoder
 from sklearn.preprocessing import MinMaxScaler
+import plotly.express as px
 
 st.set_page_config(layout="wide")
 
@@ -32,7 +33,8 @@ def load_papers():
     query = f"""
         SELECT id, title, abstract, summary, citationCount, influentialCitationCount, authors_list, referenceCount,
                fieldsOfStudy, safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
-               publicationDate, authors, openAccessPdf,  openalex_id, influential_score, groundbreaking_recent_score
+               publicationDate, authors, openAccessPdf,  openalex_id, influential_score, groundbreaking_recent_score,
+               citation_count, citation_score, normalized_novelty_score, social_media_score
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
@@ -262,13 +264,60 @@ def show_search_results():
         st.markdown("</div>", unsafe_allow_html=True)
 
 def show_paper_details(paper_id):
-    paper = df[df['id'] == paper_id].iloc[0] if not df[df['id'] == paper_id].empty else None
-    if paper is None:
+    paper_df = df[df['id'] == paper_id]
+    if paper_df.empty:
         st.write("Paper not found.")
         return
+
+    paper = paper_df.iloc[0]
+
     st.title(f"Paper Details - {paper.get('title', 'Unknown Title')}")
-    st.write(f"Abstract: {paper.get('abstract', 'No abstract')}")
-    st.write(f"Citations: {paper.get('citationCount', 'N/A')}")
+
+
+    st.subheader("Key Scores")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Novelty Score", paper.get("normalized_novelty_score", "N/A"))
+    with col2:
+        st.metric("Groundbreaking Score", paper.get("groundbreaking_recent_score", "N/A"))
+    with col3:
+        st.metric("Citation Score", paper.get("citation_score", "N/A"))
+    with col4:
+        st.metric("Influential Score", paper.get("influential_score", "N/A"))
+
+
+    st.subheader("Totals")
+    col5, col6 = st.columns(2)
+    with col5:
+        st.metric("Total Citations", paper.get("citation_score", "N/A"))
+    with col6:
+        st.metric("Total Score", paper.get("social_media_score", "N/A"))
+
+
+    st.subheader("Abstract")
+    abstract_text = paper.get("abstract", "No abstract available.")
+    st.write(abstract_text)
+
+    counts_by_year = paper.get("counts_by_year", [])
+    if counts_by_year:
+        st.subheader("Cumulative Citations by Year")
+
+
+        cby_df = pd.DataFrame(counts_by_year).sort_values("year")
+
+        cby_df["cumulative_citations"] = cby_df["cited_by_count"].cumsum()
+
+        fig = px.line(
+            cby_df,
+            x="year",
+            y="cumulative_citations",
+            labels={"year": "Year", "cumulative_citations": "Cumulative Citations"},
+            title="Cumulative Citations Over Time"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No year-by-year citation data available.")
+
 
     if st.button("Back to Search Results"):
         st.session_state['view'] = 'results'
