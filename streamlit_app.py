@@ -14,6 +14,7 @@ import streamlit.components.v1 as components
 from sentence_transformers import CrossEncoder
 from sklearn.preprocessing import MinMaxScaler
 import plotly.express as px
+from streamlit.components.v1 import html as st_html
 
 st.set_page_config(layout="wide")
 
