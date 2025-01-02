@@ -10,3 +10,4 @@ pyvis
 sentence-transformers
 scikit-learn
 db-dtypes
+plotly
