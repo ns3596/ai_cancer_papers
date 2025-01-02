@@ -200,17 +200,16 @@ def show_search_results():
         st.session_state['view'] = 'main'
         st.session_state['selected_paper_id'] = None
         st.rerun()
-
     for i, (index, row) in enumerate(papers.iterrows(), start=1):
         st.markdown(f"<div style='border-bottom: 1px solid #ddd; padding: 15px;'>", unsafe_allow_html=True)
-    
+
         st.markdown(
             f"<h4 style='margin:0; font-size:20px;'>"
             f"{i}. <a href='{row['openAccessPdf']}' target='_blank'>{row['title']}</a>"
             f"</h4>",
             unsafe_allow_html=True
         )
-    
+
         st.markdown(
             f"<p style='color: #666; font-size: 0.9em;'>"
             f"<strong>Publication Year:</strong> {row['year']} | "
@@ -219,48 +218,56 @@ def show_search_results():
             "</p>",
             unsafe_allow_html=True,
         )
-    
-        summary = row['abstract'][:200] + "..." if len(row['summary']) > 200 else row['summary']
-        st.markdown(f"<p><strong>Summary:</strong> {summary}</p>", unsafe_allow_html=True)
-    
-        inf_score = row.get('influential_score', 0)
-        gnd_score = row.get('groundbreaking_recent_score', 0)
-        nov_score = row.get('normalized_novelty_score', 0)
-    
-        table_html = f"""
-        <table 
-          style='
-            border-collapse: separate; 
-            border: 0px solid #bbb; 
-            border-radius: 0px;
-            margin-top: 10px; 
-            font-size: 0.9em;
-            overflow: hidden;
-          '
-        >
-          <thead style='background-color: #292727;'>
-            <tr>
-              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Influential Score</th>
-              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Groundbreaking Score</th>
-              <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Novelty Score</th>
-            </tr>
-          </thead style='background-color: #292727;'>
-          <tbody>
-            <tr>
-              <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{inf_score:.2f}</td>
-              <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{gnd_score:.2f}</td>
-              <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{nov_score:.2f}</td>
-            </tr>
-          </tbody>
-        </table>
-        """
-        st.markdown(table_html, unsafe_allow_html=True)
-    
+
+
+        col_left, col_right = st.columns([3, 1])
+
+        with col_left:
+
+            st.markdown(f"<p><strong>Summary:</strong> {row['summary']}</p>", unsafe_allow_html=True)
+
+        with col_right:
+
+            inf_score = row.get('influential_score', 0)
+            gnd_score = row.get('groundbreaking_recent_score', 0)
+            nov_score = row.get('normalized_novelty_score', 0)
+
+            table_html = f"""
+            <table 
+              style='
+                border-collapse: separate; 
+                border: 0px solid #bbb; 
+                border-radius: 0px;
+                margin-top: 10px; 
+                font-size: 0.9em;
+                overflow: hidden;
+              '
+            >
+              <thead style='background-color: #292727;'>
+                <tr>
+                  <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Influential Score</th>
+                  <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Groundbreaking Score</th>
+                  <th style='padding: 8px 12px; text-align: center; border-bottom: 1px solid #ddd;'>Novelty Score</th>
+                </tr>
+              </thead style='background-color: #292727;'>
+              <tbody>
+                <tr>
+                  <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{inf_score:.2f}</td>
+                  <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{gnd_score:.2f}</td>
+                  <td style='padding: 8px 12px; text-align: center; border-bottom: 0px solid #ddd;'>{nov_score:.2f}</td>
+                </tr>
+              </tbody>
+            </table>
+            """
+            st.markdown(table_html, unsafe_allow_html=True)
+
+
         if st.button(f"View More Details", key=f"details_{row['id']}"):
             st.session_state['view'] = 'details'
             st.session_state['selected_paper_id'] = row['id']
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)    
 
 def show_paper_details(paper_id):
     paper_df = df[df['id'] == paper_id]
