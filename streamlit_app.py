@@ -33,8 +33,8 @@ def load_papers():
     query = f"""
         SELECT id, title, abstract, summary, citationCount, influentialCitationCount, authors_list, referenceCount,
                fieldsOfStudy, safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
-               publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2), round(groundbreaking_recent_score,2),
-               citation_count, round(citation_score,2), round(normalized_novelty_score,2), round(social_media_score,2), counts_by_year
+               publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2) as influential_score, round(groundbreaking_recent_score,2) as groundbreaking_recent_score,
+               citation_count, round(citation_score,2) as citation_score, round(normalized_novelty_score,2) as normalized_novelty_score, round(social_media_score,2) as social_media_score, counts_by_year
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
@@ -312,7 +312,7 @@ def show_paper_details(paper_id):
         st.subheader("Cumulative Citations by Year")
         cby_df = pd.DataFrame(counts_by_year_data).sort_values("year")
         cby_df["year"] = cby_df["year"].astype(int)
-        cby_df["cumulative_citations"] = cby_df["cumulative_citations"].round(2)
+        cby_df["cumulative_citations"] = cby_df["cumulative_citations"]
 
         fig = px.line(
             cby_df,
