@@ -288,9 +288,9 @@ def show_paper_details(paper_id):
     st.subheader("Totals")
     col5, col6 = st.columns(2)
     with col5:
-        st.metric("Total Citations", paper.get("citation_score", None))
+        st.metric("Total Citations", paper.get("citation_score", "N/A"))
     with col6:
-        st.metric("Total Social Media Score", paper.get("social_media_score", None))
+        st.metric("Total Social Media Score", paper.get("social_media_score", "N/A"))
 
 
     st.subheader("Abstract")
@@ -310,6 +310,7 @@ def show_paper_details(paper_id):
 
     if counts_by_year_data:
         st.subheader("Cumulative Citations by Year")
+        cby_df = pd.DataFrame(counts_by_year_data).sort_values("year")
         cby_df["year"] = cby_df["year"].astype(int)
         cby_df["cumulative_citations"] = cby_df["cumulative_citations"].round(2)
 
