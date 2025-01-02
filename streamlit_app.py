@@ -290,7 +290,7 @@ def show_paper_details(paper_id):
     with col5:
         st.metric("Total Citations", paper.get("citation_score", None))
     with col6:
-        st.metric(f"{score:.2f}", paper.get("social_media_score", None))
+        st.metric("Total Social Media Score", paper.get("social_media_score", None))
 
 
     st.subheader("Abstract")
