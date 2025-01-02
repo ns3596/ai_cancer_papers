@@ -271,7 +271,56 @@ def show_search_results():
             st.rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)    
+def show_citation_map(df_citation, root_openalex_id, max_hop, min_citation_count):
 
+    sub_df = df_citation[
+        (df_citation['openalex_id'] == root_openalex_id) &
+        (df_citation['hop'] <= max_hop) &
+        (df_citation['citationCount'] >= min_citation_count)
+    ]
+
+    if sub_df.empty:
+        st.info("No edges found for these settings.")
+        return
+
+    G = nx.DiGraph()
+    for _, row in sub_df.iterrows():
+        src = row['source_openalex_id']
+        tgt = row['citation_openalex_id']
+        G.add_node(src)
+        G.add_node(tgt)
+        G.add_edge(src, tgt, hop=row['hop'])
+
+    if root_openalex_id not in G.nodes:
+        st.warning("Root paper not in graph!")
+        return
+
+    dist_map = nx.single_source_shortest_path_length(G, root_openalex_id, cutoff=max_hop)
+    sub_nodes = set(dist_map.keys())
+
+    net = Network(height="600px", width="100%", directed=True)
+    net.force_atlas_2based()
+
+    distance_colors = {
+        0: "#FF6666",
+        1: "#FFA500",
+        2: "#FFFF00",
+        3: "#66FF66",
+    }
+
+    for node in sub_nodes:
+        dist = dist_map[node]
+        color = distance_colors.get(dist, "#cccccc")
+        size = 20 if dist == 0 else 15
+        net.add_node(str(node), label=str(node), color=color, size=size)
+
+    for (source, target) in G.edges():
+        if source in sub_nodes and target in sub_nodes:
+            net.add_edge(str(source), str(target), color="#999999")
+
+    html_str = net.generate_html()
+    st_html(html_str, height=600, scrolling=True)
+    
 def show_paper_details(paper_id):
     paper_df = df[df['id'] == paper_id]
     if paper_df.empty:
@@ -378,52 +427,4 @@ elif st.session_state['view'] == 'results':
 elif st.session_state['view'] == 'details' and st.session_state['selected_paper_id'] is not None:
     show_paper_details(st.session_state['selected_paper_id'])
     
-def show_citation_map(df_citation, root_openalex_id, max_hop, min_citation_count):
 
-    sub_df = df_citation[
-        (df_citation['openalex_id'] == root_openalex_id) &
-        (df_citation['hop'] <= max_hop) &
-        (df_citation['citationCount'] >= min_citation_count)
-    ]
-
-    if sub_df.empty:
-        st.info("No edges found for these settings.")
-        return
-
-    G = nx.DiGraph()
-    for _, row in sub_df.iterrows():
-        src = row['source_openalex_id']
-        tgt = row['citation_openalex_id']
-        G.add_node(src)
-        G.add_node(tgt)
-        G.add_edge(src, tgt, hop=row['hop'])
-
-    if root_openalex_id not in G.nodes:
-        st.warning("Root paper not in graph!")
-        return
-
-    dist_map = nx.single_source_shortest_path_length(G, root_openalex_id, cutoff=max_hop)
-    sub_nodes = set(dist_map.keys())
-
-    net = Network(height="600px", width="100%", directed=True)
-    net.force_atlas_2based()
-
-    distance_colors = {
-        0: "#FF6666",
-        1: "#FFA500",
-        2: "#FFFF00",
-        3: "#66FF66",
-    }
-
-    for node in sub_nodes:
-        dist = dist_map[node]
-        color = distance_colors.get(dist, "#cccccc")
-        size = 20 if dist == 0 else 15
-        net.add_node(str(node), label=str(node), color=color, size=size)
-
-    for (source, target) in G.edges():
-        if source in sub_nodes and target in sub_nodes:
-            net.add_edge(str(source), str(target), color="#999999")
-
-    html_str = net.generate_html()
-    st_html(html_str, height=600, scrolling=True)
