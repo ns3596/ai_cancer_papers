@@ -34,7 +34,7 @@ def load_papers():
         SELECT id, title, abstract, summary, citationCount, influentialCitationCount, authors_list, referenceCount,
                fieldsOfStudy, safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
                publicationDate, authors, openAccessPdf,  openalex_id, influential_score, groundbreaking_recent_score,
-               citation_count, citation_score, normalized_novelty_score, social_media_score
+               citation_count, citation_score, normalized_novelty_score, social_media_score, counts_by_year
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
