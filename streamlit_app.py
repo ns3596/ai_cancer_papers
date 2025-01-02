@@ -298,12 +298,15 @@ def show_paper_details(paper_id):
     st.write(abstract_text)
 
     proto_list = paper.get('counts_by_year', [])
-    for item in paper['counts_by_year']:
-        print(type(item), item)
+
     counts_by_year_data = []
-    for item in paper['counts_by_year']:
+    for item in proto_list:
         year = item["year"]
         cited_by_count = item["cited_by_count"]
+        counts_by_year_data.append({
+            "year": year,
+            "cited_by_count": cited_by_count
+        })
 
     if counts_by_year_data:
         st.subheader("Cumulative Citations by Year")
