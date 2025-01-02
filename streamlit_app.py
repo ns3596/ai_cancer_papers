@@ -31,7 +31,7 @@ cross_encoder_model  = st.secrets["bigquery"]["cross_encoder"]
 @st.cache_data
 def load_papers():
     query = f"""
-        SELECT id, title, abstract, summary, citationCount, influentialCitationCount, authors_list, referenceCount,
+        SELECT id, title, abstract, summary_v3, citationCount, influentialCitationCount, authors_list, referenceCount,
                fieldsOfStudy, safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
                publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2) as influential_score, round(groundbreaking_recent_score,2) as groundbreaking_recent_score,
                citation_count, round(citation_score,2) as citation_score, round(normalized_novelty_score,2) as normalized_novelty_score, round(social_media_score,2) as social_media_score, counts_by_year
@@ -224,7 +224,7 @@ def show_search_results():
 
         with col_left:
 
-            st.markdown(f"<p><strong>Summary:</strong> {row['summary']}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p><strong>Summary:</strong> {row['summary_v3']}</p>", unsafe_allow_html=True)
 
         with col_right:
 
