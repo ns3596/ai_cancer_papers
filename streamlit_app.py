@@ -256,7 +256,6 @@ def show_search_results():
         """
         st.markdown(table_html, unsafe_allow_html=True)
     
-        # 5) Details button
         if st.button(f"View More Details", key=f"details_{row['id']}"):
             st.session_state['view'] = 'details'
             st.session_state['selected_paper_id'] = row['id']
@@ -301,7 +300,6 @@ def show_paper_details(paper_id):
     proto_list = paper.get('counts_by_year', [])
     counts_by_year_data = []
     for item in proto_list:
-        # item is a proto message with 'year' and 'cited_by_count' attributes
         counts_by_year_data.append({
             'year': item.year,
             'cited_by_count': item.cited_by_count
