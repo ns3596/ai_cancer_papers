@@ -298,6 +298,8 @@ def show_paper_details(paper_id):
     st.write(abstract_text)
 
     proto_list = paper.get('counts_by_year', [])
+    for item in paper['counts_by_year']:
+    print(type(item), item)
     counts_by_year_data = []
     for item in paper['counts_by_year']:
         year = item["year"]
