@@ -166,7 +166,7 @@ def filter_by_role(df, user_role):
             st.warning("No 'influentialCitationCount' column found.")
             return df
     elif user_role == "Anyone":
-        continue
+        return df
     return df
 
 def show_search_results():
