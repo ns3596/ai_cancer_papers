@@ -377,6 +377,7 @@ elif st.session_state['view'] == 'results':
     show_search_results()
 elif st.session_state['view'] == 'details' and st.session_state['selected_paper_id'] is not None:
     show_paper_details(st.session_state['selected_paper_id'])
+    
 def show_citation_map(df_citation, root_openalex_id, max_hop, min_citation_count):
 
     sub_df = df_citation[
