@@ -182,7 +182,8 @@ def show_search_results():
         papers = bm25_with_crossencoder_ranking(query,filtered_df)
     elif ranking_method == "Influential Ranking":
         papers = influential_ranking(query,filtered_df)
-    elif ranking_method == "Groundbreaking Recent Ranking":
+    elif ranking_method == "Groundbreaking Recent Ranking
+        filtered_df = filtered_df[filtered_df['year'] >=2021
         papers = groundbreaking_ranking(query,filtered_df)
     elif ranking_method == "Personalized Ranking":
         novelty_weight = st.sidebar.slider("Novelty Weight:", 0.0, 1.0, 0.5)
