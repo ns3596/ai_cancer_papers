@@ -90,14 +90,45 @@ def bm25_with_crossencoder_ranking(query, top_n=100):
     ranked_candidates = bm25_candidates.sort_values(by='cross_encoder_score', ascending=False).head(top_n)
     return ranked_candidates
 
-def influential_ranking(query, final_list=30):
-    bm25_candidates = bm25_with_crossencoder_ranking(query, top_n=100)
+def bm25_ranking_only(query, top_n=200):
+    bm25 = create_bm25(df['combined_text'])
+    query_tokens = query.split(" ")
+
+    bm25_scores = bm25.get_scores(query_tokens)
+    top_indices = np.argsort(bm25_scores)[::-1][:top_n]
+    bm25_candidates = df.iloc[top_indices].copy()
+    bm25_candidates['bm25_score'] = bm25_scores[top_indices]
+
+    return bm25_candidates
+
+
+def influential_ranking(query, bm25_top=200, final_list=30):
+
+    bm25_candidates = bm25_ranking_only(query, top_n=bm25_top)
+    
     if "influential_score" not in bm25_candidates.columns:
         st.warning("No 'influential_score' column found.")
-        return bm25_candidates.head(top_n)
+        return bm25_candidates.head(final_list)
+
     influential_threshold = bm25_candidates['influential_score'].quantile(0.7)
-    filtered_candidates = bm25_candidates[bm25_candidates['influential_score'] > influential_threshold]
-    return filtered_candidates.sort_values(by='influential_score', ascending=False).head(final_list)
+    filtered_candidates = bm25_candidates[
+        bm25_candidates['influential_score'] >= influential_threshold
+    ].copy()
+
+    if filtered_candidates.empty:
+        st.warning("No candidates above the 70th percentile for influential_score.")
+        return bm25_candidates.head(final_list)
+
+    cross_encoder = load_cross_encoder()
+    pairs = [(query, row['combined_text']) for _, row in filtered_candidates.iterrows()]
+    cross_encoder_scores = cross_encoder.predict(pairs)
+    filtered_candidates['cross_encoder_score'] = cross_encoder_scores
+
+    ranked_candidates = filtered_candidates.sort_values(
+        by='cross_encoder_score', ascending=False
+    ).head(final_list)
+
+    return ranked_candidates
 
 def groundbreaking_ranking(query, top_n=10):
     bm25_candidates = bm25_with_crossencoder_ranking(query, 300)
