@@ -183,7 +183,7 @@ def show_search_results():
     elif ranking_method == "Influential Ranking":
         papers = influential_ranking(query,filtered_df)
     elif ranking_method == "Groundbreaking Recent Ranking":
-        papers = groundbreaking_ranking(query)
+        papers = groundbreaking_ranking(query,filtered_df)
     elif ranking_method == "Personalized Ranking":
         novelty_weight = st.sidebar.slider("Novelty Weight:", 0.0, 1.0, 0.5)
         citation_weight = st.sidebar.slider("Citation Weight:", 0.0, 1.0, 0.2)
