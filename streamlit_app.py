@@ -179,9 +179,9 @@ def show_search_results():
     filtered_df = filter_by_role(df, user_role)
 
     if ranking_method == "Normal Ranking (BM25 & Cross-Encoder)":
-        papers = bm25_with_crossencoder_ranking(query)
+        papers = bm25_with_crossencoder_ranking(query,filtered_df)
     elif ranking_method == "Influential Ranking":
-        papers = influential_ranking(query)
+        papers = influential_ranking(query,filtered_df)
     elif ranking_method == "Groundbreaking Recent Ranking":
         papers = groundbreaking_ranking(query)
     elif ranking_method == "Personalized Ranking":
