@@ -74,7 +74,7 @@ def create_bm25(abstracts):
     return BM25Okapi(tokenized)
 
 
-def bm25_with_crossencoder_ranking(query, top_n=100,filtered_df):
+def bm25_with_crossencoder_ranking(query,filtered_df,top_n=100):
     bm25 = create_bm25(filtered_df['title'])
     cross_encoder = load_cross_encoder()
     query_tokens = query.split(" ")
@@ -91,8 +91,8 @@ def bm25_with_crossencoder_ranking(query, top_n=100,filtered_df):
     return ranked_candidates
 
 
-def influential_ranking(query, final_list=30,top_n=200,filtered_df=filtered_df):
-    bm25_candidates = bm25_with_crossencoder_ranking(query, top_n,filtered_df)
+def influential_ranking(query, filtered_df,final_list=30,top_n=200):
+    bm25_candidates = bm25_with_crossencoder_ranking(query,filtered_df, top_n)
     if "influential_score" not in bm25_candidates.columns:
         st.warning("No 'influential_score' column found.")
         return bm25_candidates.head(top_n)
@@ -100,8 +100,8 @@ def influential_ranking(query, final_list=30,top_n=200,filtered_df=filtered_df):
     filtered_candidates = bm25_candidates[bm25_candidates['influential_score'] > influential_threshold]
     return filtered_candidates.sort_values(by='influential_score', ascending=False).head(final_list)
 
-def groundbreaking_ranking(query, final_list=30,top_n=200,filtered_df=filtered_df):
-    bm25_candidates = bm25_with_crossencoder_ranking(query, top_n)
+def groundbreaking_ranking(query, filtered_df,final_list=30,top_n=200):
+    bm25_candidates = bm25_with_crossencoder_ranking(query,filtered_df, top_n)
     if "groundbreaking_recent_score" not in bm25_candidates.columns:
         st.warning("No 'groundbreaking_recent_score' column found.")
         return bm25_candidates.head(top_n)
