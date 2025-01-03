@@ -90,7 +90,7 @@ def bm25_with_crossencoder_ranking(query, top_n=100):
     ranked_candidates = bm25_candidates.sort_values(by='cross_encoder_score', ascending=False).head(top_n)
     return ranked_candidates
 
-def bm25_ranking_only(query, top_n=200):
+def bm25_ranking_only(query, top_n=500):
     bm25 = create_bm25(df['combined_text'])
     query_tokens = query.split(" ")
 
@@ -102,7 +102,7 @@ def bm25_ranking_only(query, top_n=200):
     return bm25_candidates
 
 
-def influential_ranking(query, bm25_top=200, final_list=30):
+def influential_ranking(query, bm25_top=500, final_list=30):
 
     bm25_candidates = bm25_ranking_only(query, top_n=bm25_top)
     
