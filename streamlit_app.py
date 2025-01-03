@@ -91,7 +91,7 @@ def bm25_with_crossencoder_ranking(query, top_n=10):
     ranked_candidates = bm25_candidates.sort_values(by='cross_encoder_score', ascending=False).head(top_n)
     return ranked_candidates
 
-def influential_ranking(query, top_n=10):
+def influential_ranking(query, top_n=30):
     bm25_candidates = bm25_with_crossencoder_ranking(query, 300)
     if "influential_score" not in bm25_candidates.columns:
         st.warning("No 'influential_score' column found.")
@@ -101,7 +101,7 @@ def influential_ranking(query, top_n=10):
     return filtered_candidates.sort_values(by='influential_score', ascending=False).head(top_n)
 
 def groundbreaking_ranking(query, top_n=10):
-    bm25_candidates = bm25_with_crossencoder_ranking(query, top_n * 5)
+    bm25_candidates = bm25_with_crossencoder_ranking(query, 300)
     if "groundbreaking_recent_score" not in bm25_candidates.columns:
         st.warning("No 'groundbreaking_recent_score' column found.")
         return bm25_candidates.head(top_n)
