@@ -75,7 +75,7 @@ def create_bm25(abstracts):
 
 
 def bm25_with_crossencoder_ranking(query, top_n=100):
-    bm25 = create_bm25(df['title'])
+    bm25 = create_bm25(filtered_df['title'])
     cross_encoder = load_cross_encoder()
     query_tokens = query.split(" ")
     bm25_scores = bm25.get_scores(query_tokens)
@@ -91,7 +91,7 @@ def bm25_with_crossencoder_ranking(query, top_n=100):
     return ranked_candidates
 
 
-def influential_ranking(query, final_list=30,top_n=100):
+def influential_ranking(query, final_list=30,top_n=200):
     bm25_candidates = bm25_with_crossencoder_ranking(query, top_n)
     if "influential_score" not in bm25_candidates.columns:
         st.warning("No 'influential_score' column found.")
@@ -100,14 +100,14 @@ def influential_ranking(query, final_list=30,top_n=100):
     filtered_candidates = bm25_candidates[bm25_candidates['influential_score'] > influential_threshold]
     return filtered_candidates.sort_values(by='influential_score', ascending=False).head(final_list)
 
-def groundbreaking_ranking(query, top_n=10):
-    bm25_candidates = bm25_with_crossencoder_ranking(query, 300)
+def groundbreaking_ranking(query, final_list=30,top_n=200):
+    bm25_candidates = bm25_with_crossencoder_ranking(query, top_n)
     if "groundbreaking_recent_score" not in bm25_candidates.columns:
         st.warning("No 'groundbreaking_recent_score' column found.")
         return bm25_candidates.head(top_n)
     groundbreaking_threshold = bm25_candidates['groundbreaking_recent_score'].quantile(0.7)
     filtered_candidates = bm25_candidates[bm25_candidates['groundbreaking_recent_score'] > groundbreaking_threshold]
-    return filtered_candidates.sort_values(by='groundbreaking_recent_score', ascending=False).head(top_n)
+    return filtered_candidates.sort_values(by='groundbreaking_recent_score', ascending=False).head(final_list)
 
 def personalized_ranking(query, user_weights, top_n=10):
     bm25_candidates = bm25_with_crossencoder_ranking(query, top_n * 5)
@@ -162,7 +162,8 @@ def filter_by_role(df, user_role):
     elif user_role == "Student":
         max_influential_citations = st.sidebar.slider("Maximum Influential Citation Count", min_value=0, max_value=10, step=1, value=3)
         if 'influentialCitationCount' in df.columns:
-            return df[df['influentialCitationCount'] <= max_influential_citations]
+            filtered_df = df[df['influentialCitationCount'] <= max_influential_citations]
+            return filtered_df
         else:
             st.warning("No 'influentialCitationCount' column found.")
             return df
