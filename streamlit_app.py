@@ -74,31 +74,43 @@ def create_bm25(abstracts):
     return BM25Okapi(tokenized)
 
 
-def bm25_with_crossencoder_ranking(query, top_n=10):
-
-    bm25 = create_bm25(df['abstract'])
+def bm25_with_crossencoder_ranking(query, top_n=300):
+    combined_text = df.apply(lambda row: f"{row['title']} {row['abstract']}", axis=1)
+    
+    bm25 = create_bm25(combined_text)
+    
     cross_encoder = load_cross_encoder()
+    
     query_tokens = query.split(" ")
     bm25_scores = bm25.get_scores(query_tokens)
-    top_indices = np.argsort(bm25_scores)[::-1][:top_n * 5]  
+    
+    top_indices = np.argsort(bm25_scores)[::-1][:top_n * 5]
     bm25_candidates = df.iloc[top_indices].copy()
     bm25_candidates['bm25_score'] = bm25_scores[top_indices]
 
-    pairs = [(query, row['abstract']) for _, row in bm25_candidates.iterrows()]
+
+    pairs = [
+        (query, f"{row['title']} {row['abstract']}")
+        for _, row in bm25_candidates.iterrows()
+    ]
+    
     cross_encoder_scores = cross_encoder.predict(pairs)
     bm25_candidates['cross_encoder_score'] = cross_encoder_scores
 
-    ranked_candidates = bm25_candidates.sort_values(by='cross_encoder_score', ascending=False).head(top_n)
+    ranked_candidates = bm25_candidates.sort_values(
+        by='cross_encoder_score', ascending=False
+    ).head(top_n)
+    
     return ranked_candidates
 
-def influential_ranking(query, top_n=30):
-    bm25_candidates = bm25_with_crossencoder_ranking(query, 300)
+def influential_ranking(query, final_list=30):
+    bm25_candidates = bm25_with_crossencoder_ranking(query, top_n=300)
     if "influential_score" not in bm25_candidates.columns:
         st.warning("No 'influential_score' column found.")
         return bm25_candidates.head(top_n)
     influential_threshold = bm25_candidates['influential_score'].quantile(0.7)
     filtered_candidates = bm25_candidates[bm25_candidates['influential_score'] > influential_threshold]
-    return filtered_candidates.sort_values(by='influential_score', ascending=False).head(top_n)
+    return filtered_candidates.sort_values(by='influential_score', ascending=False).head(final_list)
 
 def groundbreaking_ranking(query, top_n=10):
     bm25_candidates = bm25_with_crossencoder_ranking(query, 300)
