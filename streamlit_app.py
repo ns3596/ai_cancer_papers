@@ -74,7 +74,7 @@ def create_bm25(abstracts):
     return BM25Okapi(tokenized)
 
 
-def bm25_with_crossencoder_ranking(query, top_n=300):
+def bm25_with_crossencoder_ranking(query, top_n=100):
     combined_text = df.apply(lambda row: f"{row['title']} {row['abstract']}", axis=1)
     
     bm25 = create_bm25(combined_text)
@@ -84,7 +84,7 @@ def bm25_with_crossencoder_ranking(query, top_n=300):
     query_tokens = query.split(" ")
     bm25_scores = bm25.get_scores(query_tokens)
     
-    top_indices = np.argsort(bm25_scores)[::-1][:top_n * 5]
+    top_indices = np.argsort(bm25_scores)[::-1][:top_n * 2]
     bm25_candidates = df.iloc[top_indices].copy()
     bm25_candidates['bm25_score'] = bm25_scores[top_indices]
 
@@ -104,7 +104,7 @@ def bm25_with_crossencoder_ranking(query, top_n=300):
     return ranked_candidates
 
 def influential_ranking(query, final_list=30):
-    bm25_candidates = bm25_with_crossencoder_ranking(query, top_n=300)
+    bm25_candidates = bm25_with_crossencoder_ranking(query, top_n=100)
     if "influential_score" not in bm25_candidates.columns:
         st.warning("No 'influential_score' column found.")
         return bm25_candidates.head(top_n)
