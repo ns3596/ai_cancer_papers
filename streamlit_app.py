@@ -32,7 +32,7 @@ cross_encoder_model  = st.secrets["bigquery"]["cross_encoder"]
 @st.cache_data
 def load_papers():
     query = f"""
-        SELECT id, title, abstract, summary_v3, citationCount, influentialCitationCount, authors_list, referenceCount,
+        SELECT id, title, abstract,combined_text, summary_v3, citationCount, influentialCitationCount, authors_list, referenceCount,
                fieldsOfStudy, safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
                publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2) as influential_score, round(groundbreaking_recent_score,2) as groundbreaking_recent_score,
                citation_count, round(citation_score,2) as citation_score, round(normalized_novelty_score,2) as normalized_novelty_score, round(social_media_score,2) as social_media_score, counts_by_year
@@ -75,32 +75,19 @@ def create_bm25(abstracts):
 
 
 def bm25_with_crossencoder_ranking(query, top_n=100):
-    combined_text = df.apply(lambda row: f"{row['title']} {row['abstract']}", axis=1)
-    
-    bm25 = create_bm25(combined_text)
-    
+    bm25 = create_bm25(df['combined_text'])
     cross_encoder = load_cross_encoder()
-    
     query_tokens = query.split(" ")
     bm25_scores = bm25.get_scores(query_tokens)
-    
-    top_indices = np.argsort(bm25_scores)[::-1][:top_n * 2]
+    top_indices = np.argsort(bm25_scores)[::-1][:top_n * 2]  
     bm25_candidates = df.iloc[top_indices].copy()
     bm25_candidates['bm25_score'] = bm25_scores[top_indices]
 
-
-    pairs = [
-        (query, f"{row['title']} {row['abstract']}")
-        for _, row in bm25_candidates.iterrows()
-    ]
-    
+    pairs = [(query, row['combined_text']) for _, row in bm25_candidates.iterrows()]
     cross_encoder_scores = cross_encoder.predict(pairs)
     bm25_candidates['cross_encoder_score'] = cross_encoder_scores
 
-    ranked_candidates = bm25_candidates.sort_values(
-        by='cross_encoder_score', ascending=False
-    ).head(top_n)
-    
+    ranked_candidates = bm25_candidates.sort_values(by='cross_encoder_score', ascending=False).head(top_n)
     return ranked_candidates
 
 def influential_ranking(query, final_list=30):
