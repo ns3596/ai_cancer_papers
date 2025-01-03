@@ -92,7 +92,7 @@ def bm25_with_crossencoder_ranking(query, top_n=10):
     return ranked_candidates
 
 def influential_ranking(query, top_n=10):
-    bm25_candidates = bm25_with_crossencoder_ranking(query, 200)
+    bm25_candidates = bm25_with_crossencoder_ranking(query, 300)
     if "influential_score" not in bm25_candidates.columns:
         st.warning("No 'influential_score' column found.")
         return bm25_candidates.head(top_n)
