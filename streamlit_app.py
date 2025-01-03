@@ -100,7 +100,7 @@ def influential_ranking(query, filtered_df,final_list=30,top_n=300):
     filtered_candidates = bm25_candidates[bm25_candidates['influential_score'] > influential_threshold]
     return filtered_candidates.sort_values(by='influential_score', ascending=False).head(final_list)
 
-def groundbreaking_ranking(query, filtered_df,final_list=30,top_n=300):
+def groundbreaking_ranking(query, filtered_df,final_list=30,top_n=100):
     bm25_candidates = bm25_with_crossencoder_ranking(query,filtered_df, top_n)
     if "groundbreaking_recent_score" not in bm25_candidates.columns:
         st.warning("No 'groundbreaking_recent_score' column found.")
