@@ -34,7 +34,7 @@ def load_papers():
     query = f"""
         SELECT id, title, abstract,combined_text, summary_v3, citationCount, influentialCitationCount, authors_list, referenceCount,
                fieldsOfStudy, safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
-               publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2) as influential_score, round(groundbreaking_recent_score,2) as groundbreaking_recent_score,
+               publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2) as influential_score, round(groundbreaking_score,2) as groundbreaking_recent_score,
                citation_count, round(citation_score,2) as citation_score, round(normalized_novelty_score,2) as normalized_novelty_score, round(social_media_score,2) as social_media_score, counts_by_year
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
@@ -91,7 +91,7 @@ def bm25_with_crossencoder_ranking(query,filtered_df,top_n=100):
     return ranked_candidates
 
 
-def influential_ranking(query, filtered_df,final_list=30,top_n=200):
+def influential_ranking(query, filtered_df,final_list=30,top_n=300):
     bm25_candidates = bm25_with_crossencoder_ranking(query,filtered_df, top_n)
     if "influential_score" not in bm25_candidates.columns:
         st.warning("No 'influential_score' column found.")
@@ -100,7 +100,7 @@ def influential_ranking(query, filtered_df,final_list=30,top_n=200):
     filtered_candidates = bm25_candidates[bm25_candidates['influential_score'] > influential_threshold]
     return filtered_candidates.sort_values(by='influential_score', ascending=False).head(final_list)
 
-def groundbreaking_ranking(query, filtered_df,final_list=30,top_n=200):
+def groundbreaking_ranking(query, filtered_df,final_list=30,top_n=300):
     bm25_candidates = bm25_with_crossencoder_ranking(query,filtered_df, top_n)
     if "groundbreaking_recent_score" not in bm25_candidates.columns:
         st.warning("No 'groundbreaking_recent_score' column found.")
