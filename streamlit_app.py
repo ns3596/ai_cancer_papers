@@ -36,7 +36,7 @@ def load_papers():
                 safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
                publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2) as influential_score, round(groundbreaking_score,2) as groundbreaking_recent_score,
                round(citation_score,2) as citation_score, round(normalised_novelty_score,2) as normalised_novelty_score, round(social_media_score,2) as social_media_score, counts_by_year,
-               research_funding_score,avg_author_collaboration_score,max_author_collaboration_score,composite_readability,review_flag,author_expertise_score
+               research_funding_score,avg_author_collaboration_score,max_author_collaboration_score,composite_readability,review_flag,author_expertise_score,source_score
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
