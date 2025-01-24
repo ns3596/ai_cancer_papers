@@ -464,6 +464,8 @@ def show_paper_details(paper_id):
     if counts_by_year_data:
         st.subheader("Cumulative Citations by Year")
         cby_df = pd.DataFrame(counts_by_year_data).sort_values("year")
+        cby_df["year"] = pd.to_numeric(cby_df["year"], errors="coerce")
+        cby_df = cby_df.dropna(subset=["year"])
         cby_df["year"] = cby_df["year"].astype(int)
         cby_df["cumulative_citations"] = cby_df["cited_by_count"].cumsum()
         cby_df["cumulative_citations"] = cby_df["cumulative_citations"]
