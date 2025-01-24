@@ -32,10 +32,11 @@ cross_encoder_model  = st.secrets["bigquery"]["cross_encoder"]
 @st.cache_data
 def load_papers():
     query = f"""
-        SELECT id, title, abstract,combined_text, summary_v3, citationCount, influentialCitationCount, authors_list, referenceCount,
-               fieldsOfStudy, safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
+        SELECT id, title, abstract,combined_text, summary, citationCount, influentialCitationCount, authors_list, referenceCount,
+                safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
                publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2) as influential_score, round(groundbreaking_score,2) as groundbreaking_recent_score,
-               citation_count, round(citation_score,2) as citation_score, round(normalized_novelty_score,2) as normalized_novelty_score, round(social_media_score,2) as social_media_score, counts_by_year
+               round(citation_score,2) as citation_score, round(normalised_novelty_score,2) as normalised_novelty_score, round(social_media_score,2) as social_media_score, counts_by_year,
+               research_funding_score,avg_author_collaboration_score,max_author_collaboration_score,composite_readability,review_flag
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
@@ -80,7 +81,7 @@ def bm25_with_crossencoder_ranking(query,filtered_df,top_n=100):
     query_tokens = query.split(" ")
     bm25_scores = bm25.get_scores(query_tokens)
     top_indices = np.argsort(bm25_scores)[::-1][:top_n * 2]  
-    bm25_candidates = df.iloc[top_indices].copy()
+    bm25_candidates = filtered_df.iloc[top_indices].copy()
     bm25_candidates['bm25_score'] = bm25_scores[top_indices]
 
     pairs = [(query, row['title']) for _, row in bm25_candidates.iterrows()]
@@ -91,44 +92,51 @@ def bm25_with_crossencoder_ranking(query,filtered_df,top_n=100):
     return ranked_candidates
 
 
-def influential_ranking(query, filtered_df,final_list=30,top_n=300):
+def influential_ranking(query, filtered_df,final_list=50,top_n=250):
     bm25_candidates = bm25_with_crossencoder_ranking(query,filtered_df, top_n)
     if "influential_score" not in bm25_candidates.columns:
         st.warning("No 'influential_score' column found.")
         return bm25_candidates.head(top_n)
-    influential_threshold = bm25_candidates['influential_score'].quantile(0.7)
-    filtered_candidates = bm25_candidates[bm25_candidates['influential_score'] > influential_threshold]
-    return filtered_candidates.sort_values(by='influential_score', ascending=False).head(final_list)
-
-def groundbreaking_ranking(query, filtered_df,final_list=30,top_n=100):
-    bm25_candidates = bm25_with_crossencoder_ranking(query,filtered_df, top_n)
+    return bm25_candidates.sort_values(by='influential_score', ascending=False).head(final_list)
+    
+def groundbreaking_ranking(query, filtered_df, final_list=50, top_n=250):
+    bm25_candidates = bm25_with_crossencoder_ranking(query, filtered_df, top_n)
     if "groundbreaking_recent_score" not in bm25_candidates.columns:
         st.warning("No 'groundbreaking_recent_score' column found.")
         return bm25_candidates.head(top_n)
-    groundbreaking_threshold = bm25_candidates['groundbreaking_recent_score'].quantile(0.7)
-    filtered_candidates = bm25_candidates[bm25_candidates['groundbreaking_recent_score'] > groundbreaking_threshold]
-    return filtered_candidates.sort_values(by='groundbreaking_recent_score', ascending=False).head(final_list)
+    return bm25_candidates.sort_values(by='groundbreaking_recent_score',ascending=False).head(final_list)
+def personalised_ranking(query, filtered_df, user_weights, top_n=250, final_list=50):
 
-def personalized_ranking(query, user_weights, top_n=10):
-    bm25_candidates = bm25_with_crossencoder_ranking(query, top_n * 5)
+    candidates = bm25_with_crossencoder_ranking(query, filtered_df, top_n)
+
     total_weight = sum(user_weights.values())
-    normalized_weights = {k: v / total_weight for k, v in user_weights.items()}
+    if abs(total_weight - 1.0) > 1e-9:
+        st.error("Your weights must sum to 1. Please adjust them accordingly.")
+        return pd.DataFrame()  
 
-    for col in ["normalized_novelty_score", "citation_score", "social_media_score",
-                "author_expertise_score", "source_score"]:
-        if col not in bm25_candidates.columns:
-            st.warning(f"Column '{col}' not found.")
-            bm25_candidates[col] = 0 
+    required_cols = [
+        "normalised_novelty_score", 
+        "citation_score", 
+        "social_media_score",
+        "author_expertise_score", 
+        "source_score"
+    ]
+    for col in required_cols:
+        if col not in candidates.columns:
+            st.warning(f"Column '{col}' not found. Defaulting to 0 for that column.")
+            candidates[col] = 0
 
-    bm25_candidates['personalized_score'] = (
-        normalized_weights.get('novelty', 0) * bm25_candidates['normalized_novelty_score'] +
-        normalized_weights.get('citation', 0) * bm25_candidates['citation_score'] +
-        normalized_weights.get('social', 0)   * bm25_candidates['social_media_score'] +
-        normalized_weights.get('author', 0)   * bm25_candidates['author_expertise_score'] +
-        normalized_weights.get('source', 0)   * bm25_candidates['source_score']
+    candidates['personalized_score'] = (
+        user_weights.get('novelty', 0.0) * candidates['normalised_novelty_score'] +
+        user_weights.get('citation', 0.0) * candidates['citation_score'] +
+        user_weights.get('social',   0.0) * candidates['social_media_score'] +
+        user_weights.get('author',   0.0) * candidates['author_expertise_score'] +
+        user_weights.get('source',   0.0) * candidates['source_score']
     )
 
-    return bm25_candidates.sort_values(by='personalized_score', ascending=False).head(top_n)
+    sorted_df = candidates.sort_values(by='personalized_score', ascending=False)
+    return sorted_df.head(final_list)
+
 
 def show_main_page():
     st.title("AI Cancer Paper Search Engine")
@@ -144,31 +152,115 @@ def show_main_page():
         st.session_state['user_role'] = user_role
         st.session_state['ranking_method'] = ranking_method
         st.rerun()
-
 def filter_by_role(df, user_role):
+    filtered_df = df.copy()
+
     if user_role == "Academic":
-        min_citation_count = st.sidebar.slider("Minimum Citation Count", min_value=0, max_value=30, step=1, value=5)
-        return df[df.get('citationCount', 0) >= min_citation_count]
+        min_citation_count = st.sidebar.slider(
+            "Minimum Citation Count (Academics)", 
+            min_value=0, 
+            max_value=100, 
+            step=1, 
+            value=5
+        )
+        if 'citationCount' in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df['citationCount'] >= min_citation_count]
+        else:
+            st.warning("No 'citationCount' column found.")
+        return filtered_df
 
     elif user_role == "Researcher":
         current_year = pd.to_datetime('today').year
-        recent_years = st.sidebar.slider("Publication Year Range", min_value=2000, max_value=current_year, value=(current_year - 5, current_year))
-        filtered_df = df[(df.get('year', 1900) >= recent_years[0]) & (df.get('year', 1900) <= recent_years[1])]
-        if st.sidebar.checkbox("Show only open-access papers"):
-            if 'isOpenAccess' in df.columns:
-                filtered_df = filtered_df[filtered_df['isOpenAccess'] == True]
+        if 'year' in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df['year'] >= current_year - 3]
+        else:
+            st.warning("No 'year' column found.")
+
+        if st.sidebar.checkbox("Show only papers with grants"):
+            if 'research_funding_score' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['research_funding_score'] > 0]
+            else:
+                st.warning("No 'research_funding_score' column found.")
+
+        if st.sidebar.checkbox("Show only high author collaboration (≥0.7)"):
+            if 'avg_author_collaboration_score' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['avg_author_collaboration_score'] >= 0.7]
+            else:
+                st.warning("No 'avg_author_collaboration_score' column found.")
+
         return filtered_df
 
     elif user_role == "Student":
-        max_influential_citations = st.sidebar.slider("Maximum Influential Citation Count", min_value=0, max_value=10, step=1, value=3)
-        if 'influentialCitationCount' in df.columns:
-            filtered_df = df[df['influentialCitationCount'] <= max_influential_citations]
-            return filtered_df
-        else:
-            st.warning("No 'influentialCitationCount' column found.")
-            return df
+        if st.sidebar.checkbox("Filter by high readability (≥0.7)"):
+            if 'composite_readability' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['composite_readability'] >= 0.7]
+            else:
+                st.warning("No 'composite_readability' column found.")
+
+        if st.sidebar.checkbox("Filter by review-type publication"):
+            if 'review_flag' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['review_flag'] == True]
+            else:
+                st.warning("No 'review_flag' column found.")
+
+        return filtered_df
+
     elif user_role == "Anyone":
-        return df
+        st.sidebar.write("## Optional Filters for Anyone")
+
+        if st.sidebar.checkbox("Filter by Citation Count"):
+            if 'citationCount' in filtered_df.columns:
+                min_citation_count = st.sidebar.slider(
+                    "Minimum Citation Count", 
+                    min_value=0, 
+                    max_value=100, 
+                    step=1, 
+                    value=5
+                )
+                filtered_df = filtered_df[filtered_df['citationCount'] >= min_citation_count]
+            else:
+                st.warning("No 'citationCount' column found.")
+
+        if st.sidebar.checkbox("Filter by Publication Year Range"):
+            if 'year' in filtered_df.columns:
+                current_year = pd.to_datetime('today').year
+                year_range = st.sidebar.slider(
+                    "Select Publication Year Range",
+                    min_value=1900,
+                    max_value=current_year,
+                    value=(current_year - 5, current_year)
+                )
+                filtered_df = filtered_df[(filtered_df['year'] >= year_range[0]) &
+                                          (filtered_df['year'] <= year_range[1])]
+            else:
+                st.warning("No 'year' column found.")
+
+        if st.sidebar.checkbox("Show only papers with grants (research_funding_score>0)"):
+            if 'research_funding_score' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['research_funding_score'] > 0]
+            else:
+                st.warning("No 'research_funding_score' column found.")
+
+        if st.sidebar.checkbox("Show only high author collaboration (≥0.7)"):
+            if 'avg_author_collaboration_score' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['avg_author_collaboration_score'] >= 0.7]
+            else:
+                st.warning("No 'avg_author_collaboration_score' column found.")
+
+        if st.sidebar.checkbox("Show only high readability (≥0.7)"):
+            if 'composite_readability' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['composite_readability'] >= 0.7]
+            else:
+                st.warning("No 'composite_readability' column found.")
+
+        if st.sidebar.checkbox("Show only review-type publications"):
+            if 'review_flag' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['review_flag'] == True]
+            else:
+                st.warning("No 'review_flag' column found.")
+
+        return filtered_df
+
     return df
 
 def show_search_results():
@@ -199,7 +291,7 @@ def show_search_results():
             'author': author_weight,
             'source': source_weight
         }
-        papers = personalized_ranking(query, user_weights)
+        papers = personalised_ranking(query,filtered_df, user_weights)
 
     if st.button("Back to Search Bar"):
         st.session_state['view'] = 'main'
@@ -229,13 +321,13 @@ def show_search_results():
 
         with col_left:
 
-            st.markdown(f"<p><strong>Summary:</strong> {row['summary_v3']}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p><strong>Summary:</strong> {row['summary']}</p>", unsafe_allow_html=True)
 
         with col_right:
 
             inf_score = row.get('influential_score', 0)
             gnd_score = row.get('groundbreaking_recent_score', 0)
-            nov_score = row.get('normalized_novelty_score', 0)
+            nov_score = row.get('normalised_novelty_score', 0)
 
             table_html = f"""
             <table 
@@ -337,7 +429,7 @@ def show_paper_details(paper_id):
     st.subheader("Key Scores")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Novelty Score", paper.get("normalized_novelty_score", "N/A"))
+        st.metric("Novelty Score", paper.get("normalised_novelty_score", "N/A"))
     with col2:
         st.metric("Groundbreaking Score", paper.get("groundbreaking_recent_score", "N/A"))
     with col3:
@@ -349,7 +441,7 @@ def show_paper_details(paper_id):
     st.subheader("Totals")
     col5, col6 = st.columns(2)
     with col5:
-        st.metric("Total Citations", paper.get("citation_count", "N/A"))
+        st.metric("Total Citations", paper.get("citationCount", "N/A"))
     with col6:
         st.metric("Total Social Media Score", paper.get("social_media_score", "N/A"))
 
