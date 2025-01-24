@@ -36,7 +36,7 @@ def load_papers():
                 safe_cast(safe_cast(year as float64) as int64) as year, isOpenAccess, source_type,
                publicationDate, authors, openAccessPdf,  openalex_id, round(influential_score,2) as influential_score, round(groundbreaking_score,2) as groundbreaking_recent_score,
                round(citation_score,2) as citation_score, round(normalised_novelty_score,2) as normalised_novelty_score, round(social_media_score,2) as social_media_score, counts_by_year,
-               research_funding_score,avg_author_collaboration_score,max_author_collaboration_score,composite_readability,review_flag
+               research_funding_score,avg_author_collaboration_score,max_author_collaboration_score,composite_readability,review_flag,author_expertise_score
         FROM `{project_id}.{dataset_name}.{table_name}`
         WHERE abstract IS NOT NULL and openalex_data_fetched = 'Yes' and language = 'en'
     """
@@ -182,11 +182,11 @@ def filter_by_role(df, user_role):
             else:
                 st.warning("No 'research_funding_score' column found.")
 
-        if st.sidebar.checkbox("Show only high author collaboration (≥0.7)"):
-            if 'avg_author_collaboration_score' in filtered_df.columns:
-                filtered_df = filtered_df[filtered_df['avg_author_collaboration_score'] >= 0.7]
+        if st.sidebar.checkbox("Show only high author collaboration (≥0.5)"):
+            if 'max_author_collaboration_score' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['max_author_collaboration_score'] >= 0.5]
             else:
-                st.warning("No 'avg_author_collaboration_score' column found.")
+                st.warning("No 'max_author_collaboration_score' column found.")
 
         return filtered_df
 
@@ -241,11 +241,11 @@ def filter_by_role(df, user_role):
             else:
                 st.warning("No 'research_funding_score' column found.")
 
-        if st.sidebar.checkbox("Show only high author collaboration (≥0.7)"):
-            if 'avg_author_collaboration_score' in filtered_df.columns:
-                filtered_df = filtered_df[filtered_df['avg_author_collaboration_score'] >= 0.7]
+        if st.sidebar.checkbox("Show only high author collaboration (≥0.5)"):
+            if 'max_author_collaboration_score' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['max_author_collaboration_score'] >= 0.5]
             else:
-                st.warning("No 'avg_author_collaboration_score' column found.")
+                st.warning("No 'max_author_collaboration_score' column found.")
 
         if st.sidebar.checkbox("Show only high readability (≥0.7)"):
             if 'composite_readability' in filtered_df.columns:
